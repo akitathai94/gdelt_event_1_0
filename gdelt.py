@@ -58,21 +58,20 @@ def read_csv_into_df(file_name, csv_header_filename, url):
                 print(f"Filename in zipfile: {file_name}")
                 zip_ref.extractall(current_directory)
 
-            st.write("Load csv into dataframe...")
-            # read csv header
-            header_names = []
-            with open(csv_header_filename, newline='', encoding='utf-8') as csvfile:
-                header_obj = csv.reader(csvfile, delimiter='\t')
-                for col in header_obj:
-                    header_names.append(col)
-            # print(header_names[0])
-
-            # read dataframe
-            df = pd.read_csv(file_name[:-4], sep="\t",
-                             names=header_names[0], low_memory=False)
-
             status.update(label="Process complete!",
                           state="complete", expanded=False)
+
+    # read csv header
+    header_names = []
+    with open(csv_header_filename, newline='', encoding='utf-8') as csvfile:
+        header_obj = csv.reader(csvfile, delimiter='\t')
+        for col in header_obj:
+            header_names.append(col)
+    # print(header_names[0])
+
+    # read dataframe
+    df = pd.read_csv(file_name[:-4], sep="\t",
+                     names=header_names[0], low_memory=False)
 
     # load data to sessions
     if 'df' not in st.session_state:
@@ -118,17 +117,17 @@ def display_geo_data(locations):
     folium_static(m, width=700, height=500)
 
 
-with st.sidebar:
-    # all unique countries events
-    filtered_countries = []
-    if 'df' in st.session_state:
-        filtered_countries = st.session_state.df["ActionGeo_FullName"].unique(
-        )
-    options = st.multiselect(
-        "Filter out Events by Countries",
-        filtered_countries)
+# with st.sidebar:
+#     # all unique countries events
+#     filtered_countries = []
+#     if 'df' in st.session_state:
+#         filtered_countries = st.session_state.df["ActionGeo_FullName"].unique(
+#         )
+#     options = st.multiselect(
+#         "Filter out Events by Countries",
+#         filtered_countries)
 
-    st.write("You selected:", options)
+#     st.write("You selected:", options)
 
 # col2 rendering
 # with col2:
