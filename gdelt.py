@@ -13,6 +13,12 @@ from streamlit_folium import folium_static
 GDELT_DATA_EVENT_1_0_URL = "http://data.gdeltproject.org/events/"
 FILENAME = ".export.CSV.zip"
 
+# Title of the app
+st.set_page_config(layout="wide")
+st.title('GDELT Event 1.0 Query')
+
+# Columns format
+# col1, col2 = st.columns([0.3, 0.7])
 
 # Start from 20130401 until today - 1 if it passes 6AM EST, otherwise today - 2
 start = dt.datetime.strptime("20130401", "%Y%m%d")
@@ -24,29 +30,8 @@ end = dt.datetime.strptime(yesterday_formatted_now, "%Y%m%d")
 date_generated = [
     start + dt.timedelta(days=x) for x in range((end-start).days, 0, -1)]
 
-# for date in date_generated:
-#     print(date.strftime("%Y%m%d"))
-
-# Title of the app
-st.title('GDELT Event 1.0 Query')
-
-
-# List of options
-options = [date.strftime("%Y%m%d") for date in date_generated]
-
-# Dropdown menu
-selected_option = st.selectbox('Select date to load event data:', options)
-
-
-# Download csv file selected from dropdown
-selected_filename_url = GDELT_DATA_EVENT_1_0_URL + selected_option + FILENAME
-
-# Display the selected option
-st.write(f'You selected: {selected_filename_url}')
-
 
 def read_csv_into_df(file_name, csv_header_filename, url):
-    # st.write(f'You selected: {file_name}')
 
     # check if you have the file already so not download again
     # Get the current working directory
@@ -87,6 +72,11 @@ def read_csv_into_df(file_name, csv_header_filename, url):
     df = pd.read_csv(file_name[:-4], sep="\t",
                      names=header_names[0], low_memory=False)
 
+    # load data to sessions
+    if 'df' not in st.session_state:
+        st.session_state.df = df
+        # st.session_state.filtered_df = df
+
     # Configure the grid options
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_pagination(
@@ -98,7 +88,7 @@ def read_csv_into_df(file_name, csv_header_filename, url):
     # Build grid options
     gridOptions = gb.build()
 
-    AgGrid(df, gridOptions=gridOptions)
+    AgGrid(st.session_state.df, gridOptions=gridOptions)
     display_geo_data(df)
 
 
@@ -123,9 +113,38 @@ def display_geo_data(locations):
         ).add_to(m)
 
     # Display the map in Streamlit
-    st_data = folium_static(m, width=700, height=500)
+    folium_static(m, width=700, height=500)
 
 
-if st.button("Populate Data"):
+with st.sidebar:
+    # all unique countries events
+    filtered_countries = []
+    if 'df' in st.session_state:
+        filtered_countries = st.session_state.df["ActionGeo_FullName"].unique(
+        )
+    options = st.multiselect(
+        "Filter out Events by Countries",
+        filtered_countries)
+
+    st.write("You selected:", options)
+
+# col2 rendering
+# with col2:
+# List of options
+options = [date.strftime("%Y%m%d") for date in date_generated]
+
+# Dropdown menu
+selected_option = st.selectbox('Select date to load event data:', options)
+
+# Download csv file selected from dropdown
+selected_filename_url = GDELT_DATA_EVENT_1_0_URL + selected_option + FILENAME
+
+# Display the selected option
+# st.write(f'You selected: {selected_filename_url}')
+if st.button("Populate Data") or options:
     read_csv_into_df(selected_option + FILENAME,
                      "CSV.header.dailyupdates.txt", selected_filename_url)
+
+# col1 rendering
+# with col1:
+#     pass
