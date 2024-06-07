@@ -58,19 +58,21 @@ def read_csv_into_df(file_name, csv_header_filename, url):
                 print(f"Filename in zipfile: {file_name}")
                 zip_ref.extractall(current_directory)
 
+            st.write("Load csv into dataframe...")
+            # read csv header
+            header_names = []
+            with open(csv_header_filename, newline='', encoding='utf-8') as csvfile:
+                header_obj = csv.reader(csvfile, delimiter='\t')
+                for col in header_obj:
+                    header_names.append(col)
+            # print(header_names[0])
+
+            # read dataframe
+            df = pd.read_csv(file_name[:-4], sep="\t",
+                             names=header_names[0], low_memory=False)
+
             status.update(label="Process complete!",
                           state="complete", expanded=False)
-    # read csv header
-    header_names = []
-    with open(csv_header_filename, newline='', encoding='utf-8') as csvfile:
-        header_obj = csv.reader(csvfile, delimiter='\t')
-        for col in header_obj:
-            header_names.append(col)
-    # print(header_names[0])
-
-    # read dataframe
-    df = pd.read_csv(file_name[:-4], sep="\t",
-                     names=header_names[0], low_memory=False)
 
     # load data to sessions
     if 'df' not in st.session_state:
@@ -141,7 +143,7 @@ selected_filename_url = GDELT_DATA_EVENT_1_0_URL + selected_option + FILENAME
 
 # Display the selected option
 # st.write(f'You selected: {selected_filename_url}')
-if st.button("Populate Data") or options:
+if st.button("Populate Data"):
     read_csv_into_df(selected_option + FILENAME,
                      "CSV.header.dailyupdates.txt", selected_filename_url)
 
