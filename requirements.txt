@@ -2,3 +2,4 @@ streamlit
 pandas
 streamlit-aggrid
 folium
+streamlit_folium
